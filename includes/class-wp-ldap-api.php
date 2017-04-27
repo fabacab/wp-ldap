@@ -156,6 +156,22 @@ class API {
     }
 
     /**
+     * Modifies an entry in the LDAP DIT.
+     *
+     * @param string $dn
+     * @param array $entry
+     *
+     * @return bool
+     */
+    public function modify ( $dn, $entry ) {
+        return ldap_modify(
+            $this->ldap_link_id,
+            $dn,
+            $entry
+        );
+    }
+
+    /**
      * Kills the connection to the server.
      *
      * Subsequent connections need to re-connect.

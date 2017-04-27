@@ -40,7 +40,7 @@ class User {
         if ( ! $this->wp_user ) {
             return false;
         }
-        $dn = 'uid=' . $this->wp_user->data->user_login;
+        $dn = 'uid=' . $this->wp_user->user_login;
         $dn .= ( ! empty( $base_dn ) ) ? ",$base_dn" : $base_dn;
         return $dn;
     }
@@ -56,23 +56,23 @@ class User {
         $entry = array(
             // LDAP attribute => WP_User field
             'objectClass' => 'inetOrgPerson', // TODO: Variablize this?
-            'cn' => $wp_user->data->user_login,
-            'sn' => $wp_user->data->user_login,
-            'uid' => $wp_user->data->user_login,
-            'mail' => $wp_user->data->user_email,
-            'displayName' => $wp_user->data->display_name,
+            'cn' => $wp_user->user_login,
+            'sn' => $wp_user->user_login,
+            'uid' => $wp_user->user_login,
+            'mail' => $wp_user->user_email,
+            'displayName' => $wp_user->display_name,
         );
 
-        if ( ! empty( $wp_user->data->user_url ) ) {
-            $entry['labeledURI'] = $wp_user->data->user_url;
+        if ( ! empty( $wp_user->user_url ) ) {
+            $entry['labeledURI'] = $wp_user->user_url;
         }
 
-        if ( ! empty( $wp_user->data->description ) ) {
-            $entry['description'] = $wp_user->data->description;
+        if ( ! empty( $wp_user->description ) ) {
+            $entry['description'] = $wp_user->description;
         }
 
-        if ( ! empty( $wp_user->data->first_name ) ) {
-            $entry['givenName'] = $wp_user->data->first_name;
+        if ( ! empty( $wp_user->first_name ) ) {
+            $entry['givenName'] = $wp_user->first_name;
         }
 
         return $entry;

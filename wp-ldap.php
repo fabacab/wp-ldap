@@ -50,6 +50,35 @@ class WP_LDAP {
     const prefix = 'wp_ldap_';
 
     /**
+     * Get the current network's search base DN setting.
+     *
+     * @return string
+     */
+    static private function getSearchBaseDN () {
+        return API::sanitize_dn( get_network_option(
+            null,
+            self::prefix . 'search_base_dn',
+            'dc=' . str_replace( '.', ',dc=', parse_url( get_network_option( null, 'siteurl' ), PHP_URL_HOST ) )
+        ) );
+    }
+
+    /**
+     * Get an LDAP API object.
+     *
+     * @return \WP_LDAP\API
+     */
+    static private function getLdapApi () {
+        return new API(
+            esc_url_raw(
+                get_network_option( null, self::prefix . 'connect_uri' ),
+                array('ldap', 'ldaps', 'ldapi')
+            ),
+            API::sanitize_dn( get_network_option( null, self::prefix . 'bind_dn' ) ),
+            get_network_option( null, self::prefix . 'bind_password' )
+        );
+    }
+
+    /**
      * Entry point for the WordPress framework into plugin code.
      *
      * This is the method called when WordPress loads the plugin file.
@@ -68,6 +97,7 @@ class WP_LDAP {
         add_action( 'wpmu_options', array( __CLASS__, 'wpmu_options' ) );
         add_action( 'update_wpmu_options', array( __CLASS__, 'update_wpmu_options' ) );
         add_action( 'wpmu_new_user', array( __CLASS__, 'wpmu_new_user' ) );
+        add_action( 'profile_update', array( __CLASS__, 'profile_update' ), 150, 2 ); // run late
         add_action( 'shutdown', array( __CLASS__, 'shutdown' ) );
 
         register_activation_hook( __FILE__, array( __CLASS__, 'activate' ) );
@@ -123,7 +153,7 @@ class WP_LDAP {
                             }
                             $value .= '/';
                         }
-                        $value = filter_var( $value, FILTER_SANITIZE_URL );
+                        $value = esc_url_raw( $value, array( 'ldap', 'ldaps', 'ldapi' ) );
                         break;
                     case self::prefix . 'bind_dn':
                     case self::prefix . 'search_base_dn':
@@ -148,32 +178,22 @@ class WP_LDAP {
     public static function wpmu_new_user ( $user_id ) {
         $WP_User = get_userdata( $user_id );
 
-        $connect_uri = get_network_option( null, self::prefix . 'connect_uri' );
-        $bind_dn = get_network_option( null, self::prefix . 'bind_dn' );
-        $bind_password = get_network_option( null, self::prefix . 'bind_password' );
-
-        $LDAP = new API( esc_url_raw( $connect_uri, array('ldap', 'ldaps', 'ldapi') ), $bind_dn, $bind_password );
-
+        $LDAP = self::getLdapApi();
         if ( ! $LDAP->bind() ) {
             // TODO: Record an admin notice that this failed.
         }
 
         // Search to see if we have that user in the LDAP DIT already.
-        $base_dn = get_network_option(
-            null,
-            self::prefix . 'search_base_dn',
-            'dc=' . str_replace( '.', ',dc=', parse_url( get_network_option( null, 'siteurl' ), PHP_URL_HOST ) )
-        );
-        $LDAP->setBaseDN( $base_dn );
+        $sb = self::getSearchBaseDN();
+        $LDAP->setBaseDN( $sb );
         $search_results = $LDAP->search(
-            //'(objectClass=inetOrgPerson)'
-            '(&(objectClass=inetOrgPerson)(uid=' . API::escape_filter( $WP_User->data->user_login ) . '))'
+            '(&(objectClass=inetOrgPerson)(uid=' . API::escape_filter( $WP_User->user_login ) . '))'
         );
 
         if ( 1 > count( $search_results ) ) {
             $LDAP_User = new \WP_LDAP\User();
             $LDAP_User->setWordPressUser( $WP_User );
-            $LDAP->add( $LDAP_User->getEntityDN( $base_dn ), $LDAP_User->wp2entity() );
+            $LDAP->add( $LDAP_User->getEntityDN( $sb ), $LDAP_User->wp2entity() );
         } else {
             foreach( $search_results as $i => $r ) {
             }
@@ -251,6 +271,27 @@ class WP_LDAP {
      */
     public static function deactivate () {
         // TODO
+    }
+
+    /**
+     * Updates a user's profile information in the LDAP DIT.
+     *
+     * @param int $user_id
+     * @param object $old_user_data
+     *
+     * @see https://developer.wordpress.org/reference/hooks/profile_update/
+     */
+    public static function profile_update ( $user_id, $old_user_data ) {
+        $LDAP_User = new User();
+        $LDAP_User->setWordPressUser( get_userdata( $user_id ) );
+        $LDAP = self::getLdapApi();
+        if ( ! $LDAP->bind() ) {
+            // TODO: Warn with Admin notice?
+        }
+        $sb = self::getSearchBaseDN();
+        $LDAP->setBaseDN( $sb );
+        $LDAP->modify( $LDAP_User->getEntityDN( $sb ), $LDAP_User->wp2entity() );
+        $LDAP->disconnect();
     }
 
     /**

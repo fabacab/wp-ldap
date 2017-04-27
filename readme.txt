@@ -30,7 +30,7 @@ In addition to the above mappings, the following optional mappings also take pla
 * The WordPress `description` field becomes the `description` attribute in the LDAP database.
 * The WordPress user's avatar becomes the `jpegPhoto` attribute in the LDAP database. (Not yet implemented.)
 
-This plugin is designed for medium to large deployments of WordPress Multisite (or Multi-Network) instances. If you run multiple WordPress Multisite Networks, you can configure each WP Network with different LDAP settings. This plugin does not currently support single-site installs; please [post an issue on GitHub](https://github.com/meitar/wp-ldap/issues) if you want to use LDAP data stores with a WP single-site install and we can discuss use cases.
+This plugin is designed for medium to large deployments of WordPress Multisite (or Multi-Network) instances, originally developed as a collaboration with the [Glocal Coop's Activist Network Platform](https://glocal.coop/activist-network-platform/) project. If you run multiple WordPress Multisite Networks, you can configure each WP Network with different LDAP settings. This plugin does not currently support single-site installs; please [post an issue on GitHub](https://github.com/meitar/wp-ldap/issues) if you want to use LDAP data stores with a WP single-site install and we can discuss use cases.
 
 == Installation ==
 
