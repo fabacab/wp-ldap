@@ -122,6 +122,24 @@ class API {
     }
 
     /**
+     * Generates a hash suitable for storage in an LDAP DIT.
+     *
+     * Mimics the behavior of `slappasswd(8)` and only supports its
+     * salted SHA-1 algorithm. This is, sadly, the strongest storage
+     * mechanism that OpenLDAP 2.4 supports.
+     *
+     * @param string $plain
+     *
+     * @return string
+     */
+    static public function hashPassword ( $plain ) {
+        $salt = random_bytes( 8 ); // arbitrary, but 8 seems fine
+        return '{SSHA}' . base64_encode(
+            hash( 'sha1', $plain . $salt , true ) . $salt
+        );
+    }
+
+    /**
      * Performs an LDAP search.
      *
      * @var string $filter

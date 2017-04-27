@@ -25,9 +25,11 @@ There is no mapping for the WordPress user ID number on the LDAP side. Instead, 
 
 In addition to the above mappings, the following optional mappings also take place if or when the user updates their user profile:
 
-* The WordPress `user_url` field becomes the `labeledURI` attribute in the LDAP database.
 * The WordPress `first_name` field becomes the `givenName` attribute in the LDAP database.
+* The WordPress `last_name` field becomes the `sn` attribute in the LDAP database.
+* The WordPress `nickname` field becomes the `cn` attribute in the LDAP database.
 * The WordPress `description` field becomes the `description` attribute in the LDAP database.
+* The WordPress `user_url` field becomes the `labeledURI` attribute in the LDAP database.
 * The WordPress user's avatar becomes the `jpegPhoto` attribute in the LDAP database. (Not yet implemented.)
 
 This plugin is designed for medium to large deployments of WordPress Multisite (or Multi-Network) instances, originally developed as a collaboration with the [Glocal Coop's Activist Network Platform](https://glocal.coop/activist-network-platform/) project. If you run multiple WordPress Multisite Networks, you can configure each WP Network with different LDAP settings. This plugin does not currently support single-site installs; please [post an issue on GitHub](https://github.com/meitar/wp-ldap/issues) if you want to use LDAP data stores with a WP single-site install and we can discuss use cases.
@@ -55,7 +57,7 @@ For most systems, [WordPress's automatic plugin installation](https://codex.word
 
 If your web server does not serve pages over HTTPS, you will need to use the [WP-CLI](https://wp-cli.org/) or the `mysql` command-line client to configure the plugin as follows:
 
-```
+`
 mysql> SELECT meta_key,meta_value FROM wp_sitemeta WHERE site_id = 1 AND meta_key LIKE 'wp_ldap_%';
 +------------------------+----------------------------+
 | meta_key               | meta_value                 |
@@ -65,7 +67,7 @@ mysql> SELECT meta_key,meta_value FROM wp_sitemeta WHERE site_id = 1 AND meta_ke
 | wp_ldap_connect_uri    | ldaps://ldap.example.com/  |
 | wp_ldap_search_base_dn | dc=example,dc=com          |
 +------------------------+----------------------------+
-```
+`
 
 Of course, you should replace the specific details shown above with values appropriate for your deployment. You should also consider configuring your LDAP server such that the bound DN has restrictive [access controls](https://www.openldap.org/doc/admin24/access-control.html) enforced on it, as its password must be stored in the clear within WordPress's database for the plugin to function.
 
