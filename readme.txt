@@ -12,7 +12,7 @@ Translates the WordPress user database to an LDAP store of the same; manage your
 
 == Description ==
 
-This plugin turns your WordPress Dashboard into a familiar management interface for an enterprise-scale LDAP Directory Information Tree (DIT). Configure a connection to your LDAPv3 directory server, and from then on any modifications you make to your WordPress user database through the WordPress admin screens will be reflected in your LDAP database. This offers a simpler and more convenient front-end for managing user account information to support single sign-on (SSO), identitiy management, and other enterprise functions.
+This plugin turns your WordPress Dashboard into a familiar management interface for an enterprise-scale LDAP Directory Information Tree (DIT). Configure a connection to your LDAPv3 directory server, and from then on any modifications you make to your WordPress user database through the WordPress admin screens will be reflected in your LDAP database. This offers a simpler and more convenient front-end for managing user account information to support single sign-on (SSO), identity management, and other enterprise functions.
 
 All user accounts on the WordPress side are mirrored as [`inetOrgPerson` (RFC 2798)](https://www.ietf.org/rfc/rfc2798.txt) entries on the LDAP side. The following WordPress user account fields to LDAP attribute translations take place when a new WordPress user is created:
 
@@ -70,6 +70,39 @@ mysql> SELECT meta_key,meta_value FROM wp_sitemeta WHERE site_id = 1 AND meta_ke
 `
 
 Of course, you should replace the specific details shown above with values appropriate for your deployment. You should also consider configuring your LDAP server such that the bound DN has restrictive [access controls](https://www.openldap.org/doc/admin24/access-control.html) enforced on it, as its password must be stored in the clear within WordPress's database for the plugin to function.
+
+= Security =
+
+The extreme convenience this plugin offers makes it even more important that you take your LDAP DIT's security seriously. Here are some highly recommended additional configuration steps you should take if setting up a directory server for the first time.
+
+OpenLDAP `slapd(8)` will by default listen on both the IPv4 and IPv6 "any" address, exposing your directory contents to the Internet if you have not configured a firewall. Worse, the unsecured `ldap://` protocol is used out-of-the-box, which will further expose the contents of LDAP traffic to eavesdroppers. This is almost certainly not what you want.
+
+This is *bad*, and not what you want to see:
+
+`
+$ sudo netstat --listening --numeric --program --tcp | grep slapd
+tcp        0      0 0.0.0.0:389             0.0.0.0:*               LISTEN      20244/slapd
+tcp6       0      0 :::389                  :::*                    LISTEN      20244/slapd
+$ ps -ef | grep slapd | head -n 1
+openldap 12932     1  0 03:28 ?        00:00:00 /usr/sbin/slapd -h ldap:/// ldapi:/// -g openldap -u openldap -F /etc/ldap/slapd.d
+`
+
+The above shows us that `slapd` is listening for incoming TCP network connections on its default port (`389`). This is happening because `slapd` was invoked with the `-h ldap:///` option.
+
+In contrast, this is *good*, and what you probably want to see instead:
+
+`
+$ sudo netstat --listening --numeric --program --tcp | grep slapd
+tcp        0      0 127.0.0.1:389           0.0.0.0:*               LISTEN      20282/slapd
+tcp        0      0 0.0.0.0:636             0.0.0.0:*               LISTEN      20282/slapd
+tcp6       0      0 :::636                  :::*                    LISTEN      20282/slapd
+$ ps -ef | grep slapd | head -n 1
+openldap 20282     1  0 10:51 ?        00:00:00 /usr/sbin/slapd -h ldap://127.0.0.1:389/ ldaps:/// ldapi:/// -g openldap -u openldap -F /etc/ldap/slapd.d
+`
+
+The above shows us that `slapd` is still listening for connections on any configured IP address, but only with the secured `ldaps://` scheme (LDAP over TLS). It is still accepting unsecured connections, but *only* on IP address `127.0.0.1`, the local host. This means cleartext LDAP traffic is not transiting the network; it is contained within the machine itself, only traveling over the loopback interface.
+
+On a typical Debian GNU/Linux system, you invoke `slapd` as `sudo service slapd start` (which runs the `/etc/init.d/slapd` script). This sources the file at `/etc/default/slapd` to set the invocation arguments. Look for the `SLAPD_SERVICES` variable in the `/etc/default/slapd` file and set it to sensible values, as shown above, to make the change persistent across system reboots.
 
 == Changelog ==
 
