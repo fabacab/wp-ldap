@@ -1,6 +1,12 @@
 <?php
 /**
  * WP-LDAP API class to interface with an LDAP server.
+ *
+ * @license https://www.gnu.org/licenses/gpl-3.0.en.html
+ *
+ * @copyright Copyright (c) 2017 by Meitar Moscovitz
+ *
+ * @package WordPress\Plugin\WP-LDAP
  */
 namespace WP_LDAP;
 
@@ -24,18 +30,18 @@ class API {
      * Constructor.
      *
      * @param string $connect_uri
-     * @param string $bind_rdn
+     * @param string $bind_dn
      * @param string $bind_password
      *
      * @throws Exception
      */
-    function __construct ( $connect_uri, $bind_rdn = '', $bind_password = '' ) {
-        if (!function_exists('ldap_connect')) {
-            throw new Exception('PHP does not have LDAP support?');
+    public function __construct ( $connect_uri, $bind_dn = '', $bind_password = '' ) {
+        if ( ! function_exists( 'ldap_connect' ) ) {
+            throw new Exception( 'PHP does not have LDAP support?' );
         }
 
-        $this->connect_uri = $connect_uri;
-        $this->bind_rdn = $bind_rdn;
+        $this->connect_uri = filter_var( $connect_uri, FILTER_SANITIZE_URL );
+        $this->bind_dn = self::sanitize_dn( $bind_dn );
         $this->bind_password = $bind_password;
     }
 
@@ -45,7 +51,7 @@ class API {
      * @param string $dn
      */
     public function setBaseDN ( $dn ) {
-        $this->base_dn = $dn;
+        $this->base_dn = self::sanitize_dn( $dn );
     }
 
     /**
@@ -55,7 +61,7 @@ class API {
      */
     private function connect () {
         if (false === $this->ldap_link_id) {
-            $c = ldap_connect($this->connect_uri);
+            $c = ldap_connect( filter_var( $this->connect_uri, FILTER_SANITIZE_URL ) );
             ldap_set_option($c, LDAP_OPT_PROTOCOL_VERSION, 3);
             $this->ldap_link_id = $c;
         }
@@ -69,7 +75,11 @@ class API {
      */
     public function bind () {
         $this->connect();
-        return ldap_bind($this->ldap_link_id, $this->bind_rdn, $this->bind_password);
+        return ldap_bind(
+            $this->ldap_link_id,
+            self::sanitize_dn( $this->bind_dn ),
+            $this->bind_password
+        );
     }
 
     /**
@@ -79,7 +89,7 @@ class API {
      * 
      * @return string
      */
-    public function escape_filter ( $str ) {
+    static public function escape_filter ( $str ) {
         return ldap_escape( $str, null, LDAP_ESCAPE_FILTER );
     }
 
@@ -90,8 +100,25 @@ class API {
      *
      * @return string
      */
-    public function escape_dn ( $str ) {
+    static public function escape_dn ( $str ) {
         return ldap_escape( $str, null, LDAP_ESCAPE_DN );
+    }
+
+    /**
+     * Sanitizes each RDN component in a complete DN string.
+     *
+     * @param string $dn
+     *
+     * @return string
+     */
+    static public function sanitize_dn( $dn ) {
+        $parts = ldap_explode_dn( $dn, 0 );
+        $count = array_shift( $parts );
+        $clean = array();
+        foreach ( $parts as $rdn ) {
+            $clean[] = implode( '=', array_map( array( __CLASS__, 'escape_dn' ), explode( '=', $rdn ) ) );
+        }
+        return implode( ',', $clean );
     }
 
     /**
@@ -100,26 +127,16 @@ class API {
      * @var string $filter
      * @var array $attrs
      *
-     * @return \WP_LDAP\API
+     * @return \WP_LDAP\LDAP_Search_Result
      */
     public function search ($filter = 'objectClass=*', $attrs = array('uid', 'mail', 'labeledURI', 'displayName')) {
-        $r = ldap_search(
+        $sr = ldap_search(
             $this->ldap_link_id,
             $this->base_dn,
             $filter,
             $attrs
         );
-        // TODO: Implement a "search result" class as a PHP iterator for ease of use.
-        return $r;
-    }
-
-    /**
-     * @param resource $sr Search result resource.
-     *
-     * @return int
-     */
-    public function count_entries ( $sr ) {
-        return ldap_count_entries( $this->ldap_link_id, $sr );
+        return new LDAP_Search_Result( $this->ldap_link_id, $sr );
     }
 
     /**
@@ -142,9 +159,11 @@ class API {
      * Kills the connection to the server.
      *
      * Subsequent connections need to re-connect.
+     *
+     * @return bool
      */
     public function disconnect () {
-        return ldap_close($this->ldap_link_id);
+        return ldap_close( $this->ldap_link_id );
     }
 
 }

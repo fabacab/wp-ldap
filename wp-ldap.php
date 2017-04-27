@@ -19,12 +19,16 @@
  *
  * @license https://www.gnu.org/licenses/gpl-3.0.en.html
  *
- * @copyright Copyright (c) 2016 by Meitar Moscovitz
+ * @copyright Copyright (c) 2017 by Meitar Moscovitz
  *
  * @package WordPress\Plugin\WP-LDAP
  */
 
 namespace WP_LDAP;
+
+require_once plugin_dir_path( __FILE__ ) . '/includes/class-wp-ldap-user.php';
+require_once plugin_dir_path( __FILE__ ) . '/includes/class-wp-ldap-api.php';
+require_once plugin_dir_path( __FILE__ ) . '/includes/class-wp-ldap-search-result.php';
 
 if (!defined('ABSPATH')) { exit; } // Disallow direct HTTP access.
 
@@ -59,14 +63,15 @@ class WP_LDAP {
      * @return void
      */
     public static function register () {
-        add_action('plugins_loaded', array(__CLASS__, 'registerL10n'));
-        add_action('init', array(__CLASS__, 'initialize'));
-        add_action('wpmu_options', array(__CLASS__, 'wpmu_options'));
-        add_action('update_wpmu_options', array(__CLASS__, 'update_wpmu_options'));
-        add_action('wpmu_new_user', array(__CLASS__, 'wpmu_new_user'));
+        add_action( 'plugins_loaded', array( __CLASS__, 'registerL10n' ) );
+        add_action( 'init', array( __CLASS__, 'initialize' ) );
+        add_action( 'wpmu_options', array( __CLASS__, 'wpmu_options' ) );
+        add_action( 'update_wpmu_options', array( __CLASS__, 'update_wpmu_options' ) );
+        add_action( 'wpmu_new_user', array( __CLASS__, 'wpmu_new_user' ) );
+        add_action( 'shutdown', array( __CLASS__, 'shutdown' ) );
 
-        register_activation_hook(__FILE__, array(__CLASS__, 'activate'));
-        register_deactivation_hook(__FILE__, array(__CLASS__, 'deactivate'));
+        register_activation_hook( __FILE__, array( __CLASS__, 'activate' ) );
+        register_deactivation_hook( __FILE__, array( __CLASS__, 'deactivate' ) );
     }
 
     /**
@@ -104,9 +109,30 @@ class WP_LDAP {
      */
     public static function update_wpmu_options () {
         if ( $_POST ) {
-            $options = array( self::prefix . 'connect_uri', self::prefix . 'bind_rdn', self::prefix . 'bind_password', self::prefix . 'search_base_dn' );
+            $options = array( self::prefix . 'connect_uri', self::prefix . 'bind_dn', self::prefix . 'bind_password', self::prefix . 'search_base_dn' );
             $updated_options = array_intersect_key( $_POST, array_flip( $options ) );
             foreach ( $updated_options as $option => $value ) {
+                switch ( $option ) {
+                    case self::prefix . 'connect_uri':
+                        $p = parse_url( $value );
+                        if ( 'ldap' === $p['scheme'] ) {
+                            // force loopback IP address
+                            $value = 'ldap://127.0.0.1';
+                            if ( ! empty( $p['port'] ) ) {
+                                $value .= ":{$p['port']}";
+                            }
+                            $value .= '/';
+                        }
+                        $value = filter_var( $value, FILTER_SANITIZE_URL );
+                        break;
+                    case self::prefix . 'bind_dn':
+                    case self::prefix . 'search_base_dn':
+                        $value = API::sanitize_dn( $value );
+                        break;
+                    default:
+                        $value = filter_var( $value, FILTER_SANITIZE_STRING );
+                        break;
+                }
                 update_network_option( null, $option, $value );
             }
         }
@@ -123,42 +149,37 @@ class WP_LDAP {
         $WP_User = get_userdata( $user_id );
 
         $connect_uri = get_network_option( null, self::prefix . 'connect_uri' );
-        $bind_rdn = get_network_option( null, self::prefix . 'bind_rdn' );
+        $bind_dn = get_network_option( null, self::prefix . 'bind_dn' );
         $bind_password = get_network_option( null, self::prefix . 'bind_password' );
 
-        require_once plugin_dir_path( __FILE__ ) . '/includes/class-wp-ldap-api.php';
-        $LDAP = new \WP_LDAP\API( esc_url_raw( $connect_uri, array('ldap', 'ldaps', 'ldapi') ), $bind_rdn, $bind_password );
+        $LDAP = new API( esc_url_raw( $connect_uri, array('ldap', 'ldaps', 'ldapi') ), $bind_dn, $bind_password );
 
         if ( ! $LDAP->bind() ) {
             // TODO: Record an admin notice that this failed.
         }
 
-        // Do a search to see if we have that user in the LDAP DIT already.
+        // Search to see if we have that user in the LDAP DIT already.
         $base_dn = get_network_option(
             null,
             self::prefix . 'search_base_dn',
             'dc=' . str_replace( '.', ',dc=', parse_url( get_network_option( null, 'siteurl' ), PHP_URL_HOST ) )
         );
         $LDAP->setBaseDN( $base_dn );
-        $search_result = $LDAP->search(
-            '(&(objectClass=inetOrgPerson)(uid=' . $LDAP->escape_filter( $WP_User->data->user_login ) . '))'
+        $search_results = $LDAP->search(
+            //'(objectClass=inetOrgPerson)'
+            '(&(objectClass=inetOrgPerson)(uid=' . API::escape_filter( $WP_User->data->user_login ) . '))'
         );
 
-        // TODO: Make this part of the API nicer?
-        if ( 1 > $LDAP->count_entries( $search_result ) ) {
-            // No matching user in the LDAP DIT was found.
-            // Let's mirror this user's information immediately.
-            $dn = 'uid=' . $LDAP->escape_dn( $WP_User->data->user_login ) . ",$base_dn";
-            $entry = array(
-                'objectClass' => 'inetOrgPerson', // TODO: Allow a Super Admin to set this.
-                'cn' => $WP_User->data->user_login, // required by LDAP schema
-                'sn' => $WP_User->data->user_login, // required by LDAP schema
-                'uid' => $WP_User->data->user_login,
-                'mail' => $WP_User->data->user_email,
-                'displayName' => $WP_User->data->display_name,
-            );
-            $LDAP->add( $dn, $entry );
+        if ( 1 > count( $search_results ) ) {
+            $LDAP_User = new \WP_LDAP\User();
+            $LDAP_User->setWordPressUser( $WP_User );
+            $LDAP->add( $LDAP_User->getEntityDN( $base_dn ), $LDAP_User->wp2entity() );
+        } else {
+            foreach( $search_results as $i => $r ) {
+            }
         }
+
+        $LDAP->disconnect();
     }
 
     /**
@@ -182,7 +203,7 @@ class WP_LDAP {
      * @global $wp_version
      *
      * @uses $wp_version
-     * @uses My_WP_Plugin::get_minimum_wordpress_version()
+     * @uses self::get_minimum_wordpress_version()
      * @uses deactivate_plugins()
      * @uses plugin_basename()
      *
@@ -191,12 +212,17 @@ class WP_LDAP {
     public static function checkPrereqs () {
         global $wp_version;
         $min_wp_version = self::get_minimum_wordpress_version();
-        if (version_compare($min_wp_version, $wp_version) > 0) {
-            deactivate_plugins(plugin_basename(__FILE__));
-            wp_die(sprintf(
-                __('WP-LDAP requires at least WordPress version %1$s. You have WordPress version %2$s.', 'wp-ldap'),
+        if ( version_compare( $min_wp_version, $wp_version ) > 0 ) {
+            deactivate_plugins( plugin_basename( __FILE__ ) );
+            wp_die( sprintf(
+                __( 'WP-LDAP requires at least WordPress version %1$s. You have WordPress version %2$s.', 'wp-ldap' ),
                 $min_wp_version, $wp_version
-            ));
+            ) );
+        }
+
+        if ( ! function_exists( 'ldap_connect' ) ) {
+            deactivate_plugins( plugin_basename( __FILE__ ) );
+            wp_die( __( 'WP-LDAP requires the PHP LDAP extension. It is missing, or not available.', 'wp-ldap' ) );
         }
     }
 
@@ -225,6 +251,14 @@ class WP_LDAP {
      */
     public static function deactivate () {
         // TODO
+    }
+
+    /**
+     * Cleans up any remaining messiness as WP's PHP execution ends.
+     *
+     * @see https://developer.wordpress.org/reference/hooks/shutdown/
+     */
+    public static function shutdown () {
     }
 
 }

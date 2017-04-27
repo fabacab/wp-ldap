@@ -16,17 +16,17 @@ $default_search_base_dn = 'dc=' . str_replace( '.', ',dc=', parse_url( get_netwo
                 value="<?php print esc_attr( get_network_option( null, self::prefix . 'connect_uri', 'ldaps://127.0.0.1:636/' ) ); ?>"
             />
             <span class="description">
-                <?php esc_html_e( 'The address of your LDAP server.', 'wp-ldap' ); ?>
+                <?php esc_html_e( 'The address of your LDAP server. For security reasons, only the local host (IP address 127.0.0.1) is accepted here when TLS is not used by the server.', 'wp-ldap' ); ?>
             </span>
         </td>
     </tr>
     <tr>
-        <th scope="row"><?php _e( 'LDAP Bind RDN' , 'wp-ldap' ); ?></th>
+        <th scope="row"><?php _e( 'LDAP Bind DN' , 'wp-ldap' ); ?></th>
         <td>
             <input type="text" class="code large-text"
-                name="wp_ldap_bind_rdn"
+                name="wp_ldap_bind_dn"
                 placeholder="cn=admin,dc=example,dc=com"
-                value="<?php print esc_attr( get_network_option( null, self::prefix . 'bind_rdn', 'cn=admin,dc=example,dc=com' ) ); ?>"
+                value="<?php print esc_attr( get_network_option( null, self::prefix . 'bind_dn', 'cn=admin,dc=example,dc=com' ) ); ?>"
             />
             <span class="description">
                 <?php esc_html_e( 'The user with which to make an authenticated binding.', 'wp-ldap' ); ?>
