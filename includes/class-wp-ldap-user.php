@@ -56,8 +56,8 @@ class User {
         $entry = array(
             // LDAP attribute => WP_User field
             'objectClass' => 'inetOrgPerson', // TODO: Variablize this?
-            'cn' => $wp_user->user_login,
-            'sn' => $wp_user->user_login,
+            'cn' => $wp_user->nickname,
+            'sn' => ( empty( $wp_user->last_name ) ) ? $wp_user->user_login : $wp_user->last_name,
             'uid' => $wp_user->user_login,
             'mail' => $wp_user->user_email,
             'displayName' => $wp_user->display_name,

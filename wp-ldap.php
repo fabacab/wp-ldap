@@ -98,6 +98,8 @@ class WP_LDAP {
         add_action( 'update_wpmu_options', array( __CLASS__, 'update_wpmu_options' ) );
         add_action( 'wpmu_new_user', array( __CLASS__, 'wpmu_new_user' ) );
         add_action( 'profile_update', array( __CLASS__, 'profile_update' ), 150, 2 ); // run late
+        add_action( 'user_profile_update_errors', array( __CLASS__, 'user_profile_update_errors' ), 10, 3 );
+        add_action( 'after_password_reset', array( __CLASS__, 'after_password_reset' ), 10, 2 );
         add_action( 'shutdown', array( __CLASS__, 'shutdown' ) );
 
         register_activation_hook( __FILE__, array( __CLASS__, 'activate' ) );
@@ -291,6 +293,76 @@ class WP_LDAP {
         $sb = self::getSearchBaseDN();
         $LDAP->setBaseDN( $sb );
         $LDAP->modify( $LDAP_User->getEntityDN( $sb ), $LDAP_User->wp2entity() );
+        $LDAP->disconnect();
+    }
+
+    /**
+     * Checks for a user password change and updates the LDAP DIT.
+     *
+     * This is the last chance to grab the plaintext password when an
+     * update to a user profile occurs.
+     *
+     * @param WP_Error $errors
+     * @param bool $update
+     * @param object $user
+     *
+     * @see https://developer.wordpress.org/reference/hooks/user_profile_update_errors/
+     */
+    public static function user_profile_update_errors ( $errors, $update, $user ) {
+        if ( is_int( $errors->get_error_code() ) ) {
+            return; // There were errors, bail.
+        }
+
+        if ( empty( $user->user_pass ) ) {
+            return; // Password is not being updated, nothing to do.
+        }
+
+        $LDAP_User = new User();
+        $LDAP_User->setWordPressUser( $user );
+        $LDAP = self::getLdapApi();
+        if ( ! $LDAP->bind() ) {
+            // TODO: Warn with Admin notice?
+        }
+        $sb = self::getSearchBaseDN();
+        $LDAP->setBaseDN( $sb );
+        if ( $update ) {
+            $LDAP->modify(
+                $LDAP_User->getEntityDN( $sb ),
+                array( 'userPassword' => API::hashPassword( $user->user_pass ) )
+            );
+        } else {
+            $LDAP->add(
+                $LDAP_User->getEntityDN( $sb ),
+                array_merge(
+                    array( 'userPassword' => API::hashPassowrd( $user->user_pass ) ),
+                    $LDAP_User->wp2entity()
+                )
+            );
+        }
+        $LDAP->disconnect();
+    }
+
+    /**
+     * Updates the user's password in the LDAP DIT when it is reset.
+     *
+     * @param object $user
+     * @param string $new_pass
+     *
+     * @see https://developer.wordpress.org/reference/hooks/after_password_reset/
+     */
+    public static function after_password_reset ( $user, $new_pass ) {
+        $LDAP_User = new User();
+        $LDAP_User->setWordPressUser( $user );
+        $LDAP = self::getLdapApi();
+        if ( ! $LDAP->bind() ) {
+            // TODO: Warn with Admin notice?
+        }
+        $sb = self::getSearchBaseDN();
+        $LDAP->setBaseDN( $sb );
+        $LDAP->modify(
+            $LDAP_User->getEntityDN( $sb ),
+            array( 'userPassword' => API::hashPassword( $new_pass ) )
+        );
         $LDAP->disconnect();
     }
 
