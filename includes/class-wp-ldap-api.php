@@ -89,7 +89,7 @@ class API {
      * 
      * @return string
      */
-    static public function escape_filter ( $str ) {
+    public static function escape_filter ( $str ) {
         return ldap_escape( $str, null, LDAP_ESCAPE_FILTER );
     }
 
@@ -100,7 +100,7 @@ class API {
      *
      * @return string
      */
-    static public function escape_dn ( $str ) {
+    public static function escape_dn ( $str ) {
         return ldap_escape( $str, null, LDAP_ESCAPE_DN );
     }
 
@@ -111,7 +111,7 @@ class API {
      *
      * @return string
      */
-    static public function sanitize_dn( $dn ) {
+    public static function sanitize_dn( $dn ) {
         $parts = ldap_explode_dn( $dn, 0 );
         $count = array_shift( $parts );
         $clean = array();
@@ -132,7 +132,7 @@ class API {
      *
      * @return string
      */
-    static public function hashPassword ( $plain ) {
+    public static function hashPassword ( $plain ) {
         $salt = random_bytes( 8 ); // arbitrary, but 8 seems fine
         return '{SSHA}' . base64_encode(
             hash( 'sha1', $plain . $salt , true ) . $salt
