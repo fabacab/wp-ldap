@@ -195,7 +195,18 @@ class WP_LDAP {
         if ( 1 > count( $search_results ) ) {
             $LDAP_User = new \WP_LDAP\User();
             $LDAP_User->setWordPressUser( $WP_User );
-            $LDAP->add( $LDAP_User->getEntityDN( $sb ), $LDAP_User->wp2entity() );
+            $LDAP->add(
+                $LDAP_User->getEntityDN( $sb ),
+                /**
+                 * Filters the LDAP entry array.
+                 *
+                 * @param array $entry The array of LDAP object attributes and values.
+                 *
+                 * @see https://secure.php.net/manual/en/function.ldap-add.php
+                 * @see \WP_LDAP\API::wp2entity()
+                 */
+                apply_filters( self::prefix . 'user_to_entity' , $LDAP_User->wp2entity() )
+            );
         } else {
             foreach( $search_results as $i => $r ) {
             }
@@ -292,7 +303,10 @@ class WP_LDAP {
         }
         $sb = self::getSearchBaseDN();
         $LDAP->setBaseDN( $sb );
-        $LDAP->modify( $LDAP_User->getEntityDN( $sb ), $LDAP_User->wp2entity() );
+        $LDAP->modify(
+            $LDAP_User->getEntityDN( $sb ),
+            apply_filters( self::prefix . 'user_to_entity', $LDAP_User->wp2entity() )
+        );
         $LDAP->disconnect();
     }
 
@@ -335,7 +349,7 @@ class WP_LDAP {
                 $LDAP_User->getEntityDN( $sb ),
                 array_merge(
                     array( 'userPassword' => API::hashPassowrd( $user->user_pass ) ),
-                    $LDAP_User->wp2entity()
+                    apply_filters( self::prefix . 'user_to_entity', $LDAP_User->wp2entity() )
                 )
             );
         }

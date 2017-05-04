@@ -14,6 +14,8 @@ Translates the WordPress user database to an LDAP store of the same; manage your
 
 This plugin turns your WordPress Dashboard into a familiar management interface for an enterprise-scale LDAP Directory Information Tree (DIT). Configure a connection to your LDAPv3 directory server, and from then on any modifications you make to your WordPress user database through the WordPress admin screens will be reflected in your LDAP database. This offers a simpler and more convenient front-end for managing user account information to support single sign-on (SSO), identity management, and other enterprise functions.
 
+*Donations for this plugin make up a chunk of my income. If you continue to enjoy this plugin, please consider [making a donation](https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=TJLPJYXHSRBEE&lc=US&item_name=WP-LDAP&item_number=WP-LDAP&currency_code=USD&bn=PP%2dDonationsBF%3abtn_donate_SM%2egif%3aNonHosted). :) Thank you for your support!*
+
 All user accounts on the WordPress side are mirrored as [`inetOrgPerson` (RFC 2798)](https://www.ietf.org/rfc/rfc2798.txt) entries on the LDAP side. The following WordPress user account fields to LDAP attribute translations take place when a new WordPress user is created:
 
 * The WordPress `user_login` field becomes the `uid` attribute in the LDAP database.
@@ -108,3 +110,7 @@ On a typical Debian GNU/Linux system, you invoke `slapd` as `sudo service slapd 
 
 = 0.1 =
 * First prototype.
+
+== Other notes ==
+
+This plugin is free software, but grocery stores do not offer free food. *Donations for this plugin make up a chunk of my income. If you continue to enjoy this plugin, please consider [making a donation](https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=TJLPJYXHSRBEE&lc=US&item_name=WP-LDAP&item_number=WP-LDAP&currency_code=USD&bn=PP%2dDonationsBF%3abtn_donate_SM%2egif%3aNonHosted). :) Thank you for your support!*

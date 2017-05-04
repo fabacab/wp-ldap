@@ -168,7 +168,7 @@ class API {
     public function add ( $dn, $entry ) {
         return ldap_add(
             $this->ldap_link_id,
-            $dn,
+            self::sanitize_dn( $dn ),
             $entry
         );
     }
@@ -184,7 +184,7 @@ class API {
     public function modify ( $dn, $entry ) {
         return ldap_modify(
             $this->ldap_link_id,
-            $dn,
+            self::sanitize_dn( $dn ),
             $entry
         );
     }
