@@ -75,6 +75,16 @@ class User {
             $entry['givenName'] = $wp_user->first_name;
         }
 
+        if ( class_exists( 'WP_PGP_Encrypted_Emails' ) && has_filter( 'smime_pem_to_der' ) ) {
+            $smime_cert = \WP_PGP_Encrypted_Emails::getUserCert( $wp_user );
+            if ( $smime_cert ) {
+                $entry['userSMIMECertificate'] = apply_filters(
+                    'smime_pem_to_der',
+                    apply_filters( 'smime_certificate_pem_encode', $smime_cert )
+                );
+            }
+        }
+
         return $entry;
     }
 
