@@ -3,8 +3,8 @@ Contributors: meitar
 Donate link: https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=TJLPJYXHSRBEE&lc=US&item_name=WP-LDAP&item_number=WP-LDAP&currency_code=USD&bn=PP%2dDonationsBF%3abtn_donate_SM%2egif%3aNonHosted
 Tags: multisite, ldap, users, administration
 Requires at least: 4.6
-Tested up to: 4.7.4
-Stable tag: 0.1
+Tested up to: 4.7.5
+Stable tag: 0.1.1
 License: GPL-3.0
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
@@ -33,6 +33,10 @@ In addition to the above mappings, the following optional mappings also take pla
 * The WordPress `description` field becomes the `description` attribute in the LDAP database.
 * The WordPress `user_url` field becomes the `labeledURI` attribute in the LDAP database.
 * The WordPress user's avatar becomes the `jpegPhoto` attribute in the LDAP database. (Not yet implemented.)
+
+Moreover, WP-LDAP is aware of certain features provided by other plugins. These include:
+
+* The WordPress user's S/MIME certificate (`smime_certificate` field) becomes the `userSMIMECertificate` attribute in the LDAP database. (This functionality is provided by the [WP PGP Encrypted Emails](https://wordpress.org/plugins/wp-pgp-encrypted-emails/) plugin and that plugin must be installed and activated for this to work.)
 
 This plugin is designed for medium to large deployments of WordPress Multisite (or Multi-Network) instances, originally developed as a collaboration with the [Glocal Coop's Activist Network Platform](https://glocal.coop/activist-network-platform/) project. If you run multiple WordPress Multisite Networks, you can configure each WP Network with different LDAP settings. This plugin does not currently support single-site installs; please [post an issue on GitHub](https://github.com/meitar/wp-ldap/issues) if you want to use LDAP data stores with a WP single-site install and we can discuss use cases.
 
@@ -73,7 +77,7 @@ mysql> SELECT meta_key,meta_value FROM wp_sitemeta WHERE site_id = 1 AND meta_ke
 
 Of course, you should replace the specific details shown above with values appropriate for your deployment. You should also consider configuring your LDAP server such that the bound DN has restrictive [access controls](https://www.openldap.org/doc/admin24/access-control.html) enforced on it, as its password must be stored in the clear within WordPress's database for the plugin to function.
 
-= Security =
+**Security**
 
 The extreme convenience this plugin offers makes it even more important that you take your LDAP DIT's security seriously. Here are some highly recommended additional configuration steps you should take if setting up a directory server for the first time.
 
@@ -107,6 +111,10 @@ The above shows us that `slapd` is still listening for connections on any config
 On a typical Debian GNU/Linux system, you invoke `slapd` as `sudo service slapd start` (which runs the `/etc/init.d/slapd` script). This sources the file at `/etc/default/slapd` to set the invocation arguments. Look for the `SLAPD_SERVICES` variable in the `/etc/default/slapd` file and set it to sensible values, as shown above, to make the change persistent across system reboots.
 
 == Changelog ==
+
+= 0.1.1 =
+
+* Feature: Recognize a user's S/MIME certificate and use [WP PGP Encrypted Emails](https://wordpress.org/plugins/wp-pgp-encrypted-emails/)'s S/MIME API to sync it, too.
 
 = 0.1 =
 * First prototype.

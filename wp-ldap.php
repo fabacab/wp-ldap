@@ -7,7 +7,7 @@
  * * Plugin Name: WP-LDAP
  * * Plugin URI: https://github.com/meitar/wp-ldap
  * * Description: Feature-rich LDAP connector for WordPress and WP Multisite.
- * * Version: 0.1
+ * * Version: 0.1.1
  * * Author: Meitar Moscovitz <meitarm@gmail.com>
  * * Author URI: https://maymay.net/
  * * License: GPL-3.0
