@@ -48,6 +48,12 @@ class User {
     /**
      * Maps a WordPress User object to an LDAP entity.
      *
+     * @uses `wp_smime_user_certificate`
+     * @uses `smime_certificate_pem_encode`
+     * @uses `smime_pem_to_der`
+     *
+     * @see https://github.com/meitar/wp-pgp-encrypted-emails/#smime-api
+     *
      * @return array
      */
     public function wp2entity () {
@@ -75,8 +81,8 @@ class User {
             $entry['givenName'] = $wp_user->first_name;
         }
 
-        if ( class_exists( 'WP_PGP_Encrypted_Emails' ) && has_filter( 'smime_pem_to_der' ) ) {
-            $smime_cert = \WP_PGP_Encrypted_Emails::getUserCert( $wp_user );
+        if ( has_filter( 'smime_pem_to_der' ) ) {
+            $smime_cert = apply_filters( 'wp_smime_user_certificate', $wp_user );
             if ( $smime_cert ) {
                 $entry['userSMIMECertificate'] = apply_filters(
                     'smime_pem_to_der',
