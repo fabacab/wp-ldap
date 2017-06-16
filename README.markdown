@@ -13,7 +13,10 @@ This plugin is designed for medium to large deployments of WordPress Multisite (
 The easiest way to develop is to use [VVV's Custom Site Template](https://github.com/Varying-Vagrant-Vagrants/custom-site-template) setup. Once that's installed and you have a running WP Multisite, perform the following additional commands:
 
 ```sh
-vagrant ssh                       # Enter the Vagrant VM.
-sudo apt install slapd ldap-utils # Install OpenLDAP's stand-alone LDAP daemon and helper utilities.
-# sudo dpkg-reconfigure slapd     # Reconfigure the daemon to start over during your development.
+vagrant ssh                          # Enter the Vagrant VM.
+sudo apt install -y php-ldap         # Install the PHP LDAP extension for your default PHP version.
+sudo apt install -y slapd ldap-utils # Install OpenLDAP's stand-alone LDAP daemon and helper utilities.
+# sudo dpkg-reconfigure slapd        # Reconfigure to add a basic DIT, if not automatically triggered.
 ```
+
+Please see the project [wiki](https://github.com/meitar/wp-ldap/wiki) for additional information.
