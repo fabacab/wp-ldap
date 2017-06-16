@@ -40,7 +40,7 @@ class User {
         if ( ! $this->wp_user ) {
             return false;
         }
-        $dn = 'uid=' . $this->wp_user->user_login;
+        $dn = 'employeeNumber=' . API::escape_dn( $this->wp_user->ID ) . '+uid=' . API::escape_dn( $this->wp_user->user_login );
         $dn .= ( ! empty( $base_dn ) ) ? ",$base_dn" : $base_dn;
         return $dn;
     }
@@ -67,6 +67,7 @@ class User {
             'uid' => $wp_user->user_login,
             'mail' => $wp_user->user_email,
             'displayName' => $wp_user->display_name,
+            'employeeNumber' => $wp_user->ID,
         );
 
         if ( ! empty( $wp_user->user_url ) ) {

@@ -22,8 +22,9 @@ All user accounts on the WordPress side are mirrored as [`inetOrgPerson` (RFC 27
 * The WordPress `user_email` field becomes the `mail` attribute in the LDAP database.
 * The WordPress `display_name` field becomes the `displayName` attribute in the LDAP database.
 * The WordPress `user_pass` field becomes the `userPassword` attribute in the LDAP database.
+* The WordPress user's `ID` field becomes the `employeeNumber` attribute in the LDAP database.
 
-There is no mapping for the WordPress user ID number on the LDAP side. Instead, users are uniquely identified by their fully-qualified Distinguished Name (DN). A user's DN is automatically composed by combining their WordPress `user_login` with the WordPress Multisite's configured LDAP Search Base setting. For instance, by default, a WordPress Multisite with WP-LDAP installed running at `https://example.com/` with a user whose username is `exampleuser` will automatically be mirrored over LDAP to the user identified as `uid=exampleuser,dc=example,dc=com`.
+On the LDAP side, users are uniquely identified by their fully-qualified Distinguished Name (DN). A user's DN is automatically composed by combining their WordPress `user_login` and `ID` fields with the WordPress Multisite's configured LDAP Search Base setting. For instance, by default, a WordPress Multisite with WP-LDAP installed running at `https://example.com/` with a user whose username is `exampleuser` and numeric user ID value of `2` will automatically be mirrored over LDAP to the user identified as `employeeNumber=2+uid=exampleuser,dc=example,dc=com`.
 
 In addition to the above mappings, the following optional mappings also take place if or when the user updates their user profile:
 
@@ -56,7 +57,7 @@ For most systems, [WordPress's automatic plugin installation](https://codex.word
 * PHP 5.3 or later is required, as WP-LDAP makes use of [PHP Namespaces](https://php.net/manual/en/language.namespaces.php).
 * The [PHP LDAP](https://php.net/manual/en/book.ldap.php) extension must be installed. On a Debian system, this is usually as simple as running `sudo apt install php-ldap`. The plugin will automatically deactivate itself if this requirement is not met.
 * Your WordPress installation must be configured as a [Multisite](https://codex.wordpress.org/Multisite) instance. (WordPress single-site installs are not currently supported.)
-* You must be able to bind to an LDAPv3 directory server. (LDAPv2 is not supported.)
+* You must be able to bind to an [RFC 4514](https://tools.ietf.org/html/rfc4514)-compliant LDAPv3 directory server. (LDAPv2 is *not* supported; Microsoft Active Directory is *not* supported; OpenLDAP is recommended.)
 * To configure the LDAP connection over the Web interface, you must be able to serve your website over HTTPS. (Unsecured HTTP Web-based configuration is not supported.)
 
 = Configuration =

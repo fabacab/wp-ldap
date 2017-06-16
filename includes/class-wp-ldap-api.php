@@ -107,6 +107,13 @@ class API {
     /**
      * Sanitizes each RDN component in a complete DN string.
      *
+     * Also checks for multi-valued RDNs (containing a `+` character),
+     * and sanitizes each of their single values. This is described in
+     * {@link https://tools.ietf.org/html/rfc4514#section-2.2 RFC 4514 § 2.2}.
+     *
+     * Multi-valued RDNs are {@link https://msdn.microsoft.com/en-us/library/cc223237.aspx not supported}
+     * by Microsoft Active Directory implementations of the LDAP spec.
+     *
      * @param string $dn
      *
      * @return string
@@ -116,7 +123,16 @@ class API {
         $count = array_shift( $parts );
         $clean = array();
         foreach ( $parts as $rdn ) {
-            $clean[] = implode( '=', array_map( array( __CLASS__, 'escape_dn' ), explode( '=', $rdn ) ) );
+            if ( false === strpos( $rdn, '+' ) ) {
+                $clean[] = implode( '=', array_map( array( __CLASS__, 'escape_dn' ), explode( '=', $rdn ) ) );
+            } else {
+                $p = explode( '+', $rdn );
+                $r = array();
+                foreach ( $p as $q ) {
+                    $r[] = implode( '=', array_map( array( __CLASS__, 'escape_dn' ), explode( '=', $q ) ) );
+                }
+                $clean[] = implode( '+', $r );
+            }
         }
         return implode( ',', $clean );
     }
