@@ -1,6 +1,10 @@
 # WP-LDAP
 
-[![Download WP-LDAP from WordPress.org](https://img.shields.io/wordpress/plugin/dt/wp-ldap.svg)](https://wordpress.org/plugins/wp-ldap/) [![Current release at WordPress.org](https://img.shields.io/wordpress/plugin/v/wp-ldap.svg)](https://wordpress.org/plugins/wp-ldap/) [![Required WordPress version](https://img.shields.io/wordpress/v/wp-ldap.svg)](https://wordpress.org/plugins/wp-ldap/developers/) [![WP-LDAP is licensed GPL-3.0](https://img.shields.io/github/license/meitar/wp-ldap.svg)](https://www.gnu.org/licenses/quick-guide-gplv3.en.html)
+[![Download WP-LDAP from WordPress.org](https://img.shields.io/wordpress/plugin/dt/wp-ldap.svg)](https://wordpress.org/plugins/wp-ldap/)
+[![Current release at WordPress.org](https://img.shields.io/wordpress/plugin/v/wp-ldap.svg)](https://wordpress.org/plugins/wp-ldap/)
+[![Required WordPress version](https://img.shields.io/wordpress/v/wp-ldap.svg)](https://wordpress.org/plugins/wp-ldap/developers/)
+[![WP-LDAP is licensed GPL-3.0](https://img.shields.io/github/license/meitar/wp-ldap.svg)](https://www.gnu.org/licenses/quick-guide-gplv3.en.html)
+[![Build status](https://travis-ci.org/meitar/wp-ldap.svg?branch=develop)](https://travis-ci.org/meitar/wp-ldap)
 
 WP-LDAP is a feature-rich LDAPv3 connector for WordPress that turns your WordPress Multisite Network into a front-end for managing an LDAP Directory Information Tree (DIT). It automates the process of managing user account information to support single sign-on ("SSO"), identity management, and other enterprise functions through the familiar WordPress Network Admin Dashboard screens.
 
