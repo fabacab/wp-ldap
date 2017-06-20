@@ -145,11 +145,13 @@ class API {
      * mechanism that OpenLDAP 2.4 supports.
      *
      * @param string $plain
+     * @param string $salt
      *
      * @return string
      */
-    public static function hashPassword ( $plain ) {
-        $salt = random_bytes( 8 ); // arbitrary, but 8 seems fine
+    public static function hashPassword ( $plain, $salt = '' ) {
+        // Generate 8 bytes of salt if not given any.
+        $salt = ( empty( $salt ) ) ? random_bytes( 8 ): $salt;
         return '{SSHA}' . base64_encode(
             hash( 'sha1', $plain . $salt , true ) . $salt
         );
