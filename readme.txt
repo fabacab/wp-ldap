@@ -1,5 +1,5 @@
 === WP-LDAP ===
-Contributors: meitar
+Contributors: maymay
 Donate link: https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=TJLPJYXHSRBEE&lc=US&item_name=WP-LDAP&item_number=WP-LDAP&currency_code=USD&bn=PP%2dDonationsBF%3abtn_donate_SM%2egif%3aNonHosted
 Tags: multisite, ldap, users, administration
 Requires at least: 4.6
@@ -39,7 +39,7 @@ Moreover, WP-LDAP is aware of certain features provided by other plugins. These 
 
 * The WordPress user's S/MIME certificate (`smime_certificate` field) becomes the `userSMIMECertificate` attribute in the LDAP database. (This functionality is provided by the [WP PGP Encrypted Emails](https://wordpress.org/plugins/wp-pgp-encrypted-emails/) plugin and that plugin must be installed and activated for this to work.)
 
-This plugin is designed for medium to large deployments of WordPress Multisite (or Multi-Network) instances, originally developed as a collaboration with the [Glocal Coop's Activist Network Platform](https://glocal.coop/activist-network-platform/) project. If you run multiple WordPress Multisite Networks, you can configure each WP Network with different LDAP settings. This plugin does not currently support single-site installs; please [post an issue on GitHub](https://github.com/meitar/wp-ldap/issues) if you want to use LDAP data stores with a WP single-site install and we can discuss use cases.
+This plugin is designed for medium to large deployments of WordPress Multisite (or Multi-Network) instances, originally developed as a collaboration with the [Glocal Coop's Activist Network Platform](https://glocal.coop/activist-network-platform/) project. If you run multiple WordPress Multisite Networks, you can configure each WP Network with different LDAP settings. This plugin does not currently support single-site installs; please [post an issue on GitHub](https://github.com/fabacab/wp-ldap/issues) if you want to use LDAP data stores with a WP single-site install and we can discuss use cases.
 
 == Installation ==
 

@@ -1,19 +1,13 @@
 {
-    "name": "meitar/wp-ldap",
+    "name": "fabacab/wp-ldap",
     "description": "Manage your LDAP DIT using your WordPress Dashboard.",
     "type": "project",
     "license": "GPL-3.0",
     "homepage": "https://wordpress.org/plugins/wp-ldap/",
     "support": {
-        "issues": "https://github.com/meitar/wp-ldap/issues",
-        "wiki": "https://github.com/meitar/wp-ldap/wiki",
-        "source": "https://github.com/meitar/wp-ldap/tree/master"
+        "issues": "https://github.com/fabacab/wp-ldap/issues",
+        "wiki": "https://github.com/fabacab/wp-ldap/wiki",
+        "source": "https://github.com/fabacab/wp-ldap/tree/master"
     },
-    "authors": [
-        {
-            "name": "Meitar M.",
-            "email": "meitarm@gmail.com"
-        }
-    ],
     "require": {}
 }

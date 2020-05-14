@@ -5,10 +5,9 @@
  * WordPress plugin header information:
  *
  * * Plugin Name: WP-LDAP
- * * Plugin URI: https://github.com/meitar/wp-ldap
+ * * Plugin URI: https://github.com/fabacab/wp-ldap
  * * Description: Feature-rich LDAP connector for WordPress and WP Multisite.
  * * Version: 0.1.1
- * * Author: Meitar Moscovitz <meitarm@gmail.com>
  * * Author URI: https://maymay.net/
  * * License: GPL-3.0
  * * License URI: https://www.gnu.org/licenses/gpl-3.0.en.html
@@ -18,8 +17,6 @@
  * @link https://developer.wordpress.org/plugins/the-basics/header-requirements/
  *
  * @license https://www.gnu.org/licenses/gpl-3.0.en.html
- *
- * @copyright Copyright (c) 2017 by Meitar Moscovitz
  *
  * @package WordPress\Plugin\WP-LDAP
  */
